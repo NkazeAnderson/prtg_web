@@ -1,10 +1,27 @@
 import { deviceSchema, groupSchema, probeSchema } from "@/schemas";
-import Button from "@/src/components/Button";
+import { DeviceSensorsChart } from "@/src/components/PieChart";
+import { Button } from "@/src/shadcn/components/ui/button";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/src/shadcn/components/ui/navigation-menu";
 import { pullPrtgGraph } from "@/src/utils";
-import { groupT } from "@/types";
+import { deviceT, groupT } from "@/types";
+import { NavigationMenuItem } from "@radix-ui/react-navigation-menu";
 import Image from "next/image";
 
-const Group = ({ group }: { group: groupT }) => {
+const Device = ({ device }: { device: deviceT }) => {
+  return (
+    <div>
+      <DeviceSensorsChart device={device} />
+    </div>
+  );
+};
+
+const Group = ({ group, depth }: { group: groupT; depth: number }) => {
   const devices = deviceSchema
     .array()
     .parse(
@@ -33,42 +50,44 @@ const Group = ({ group }: { group: groupT }) => {
         : [group.probenode]
     );
   return (
-    <div>
-      <p>
-        {" "}
-        <b>Name:</b> {group.name}
-      </p>
+    <div className={`d`} style={{ paddingLeft: depth * 10 }}>
+      <p className={``}>{group.name}</p>
 
-      <div>
-        <h1>Probes</h1>
-        {probes.map((item) => (
-          <div key={item.id}>
-            <p>
-              <b>Name:</b> {item.name}
-            </p>
-            <Group group={item} />
-          </div>
-        ))}
-      </div>
-      <div>
-        <h1>Groups</h1>
-        {groups.map((item) => (
-          <div key={item.id}>
-            <p>
-              <b>Name:</b> {item.name}
-            </p>
-            <Group group={item} />
-          </div>
-        ))}
-      </div>
-      <div>
-        <h1>Devices</h1>
-        {devices.map((item) => (
-          <p key={item.id}>
-            <b>Name:</b> {item.name}
-          </p>
-        ))}
-      </div>
+      {Boolean(probes.length) && (
+        <div>
+          <h1>Probes</h1>
+          {probes.map((item) => (
+            <div key={item.id}>
+              <Group group={item} depth={depth + 1} />
+            </div>
+          ))}
+        </div>
+      )}
+      {Boolean(groups.length) && (
+        <div>
+          <h1>Groups</h1>
+          {groups.map((item) => (
+            <div key={item.id}>
+              <Group group={item} depth={depth + 1} />
+            </div>
+          ))}
+        </div>
+      )}
+      {Boolean(devices.length) && (
+        <div>
+          <h1>Devices</h1>
+          {devices.map((item) => (
+            <div>
+              <div className="w-[250]">
+                <p key={item.id}>
+                  <b>Name:</b> {item.name}
+                </p>
+                <Device device={item} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -79,8 +98,19 @@ export default async function Home() {
   console.log({ rootGroup });
 
   return (
-    <div className="w-screen h-screen bg-blue-950">
-      <Group group={rootGroup} />
+    <div className="w-screen h-screen overflow-scroll">
+      <div className="p-4 bg-gray-700 text-white font-semibold">
+        <NavigationMenu>
+          <NavigationMenuList>
+            <NavigationMenuItem>
+              <NavigationMenuLink>Devices</NavigationMenuLink>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
+      </div>
+      <div className=" container p-4">
+        <Group group={rootGroup} depth={0} />
+      </div>
     </div>
   );
 }

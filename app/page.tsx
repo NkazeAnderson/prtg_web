@@ -15,13 +15,26 @@ import Image from "next/image";
 
 const Device = ({ device }: { device: deviceT }) => {
   return (
-    <div>
+    <div className=" w-[160]">
+      <div className=" border border-gray-900 bg-gray-100 p-2">
+        <h2 className=" text-yellow-800 capitalize font-semibold">
+          device - {device.name}
+        </h2>
+      </div>
       <DeviceSensorsChart device={device} />
     </div>
   );
 };
 
-const Group = ({ group, depth }: { group: groupT; depth: number }) => {
+const Group = ({
+  group,
+  depth,
+  isProbe,
+}: {
+  group: groupT;
+  depth: number;
+  isProbe?: boolean;
+}) => {
   const devices = deviceSchema
     .array()
     .parse(
@@ -50,41 +63,44 @@ const Group = ({ group, depth }: { group: groupT; depth: number }) => {
         : [group.probenode]
     );
   return (
-    <div className={`d`} style={{ paddingLeft: depth * 10 }}>
-      <p className={``}>{group.name}</p>
-
-      {Boolean(probes.length) && (
-        <div>
-          <h1>Probes</h1>
-          {probes.map((item) => (
-            <div key={item.id}>
-              <Group group={item} depth={depth + 1} />
-            </div>
-          ))}
+    <div
+      className={` border border-green-200 rounded-2xl my-2 self-start flex gap-4`}
+      style={{ paddingLeft: depth * 10 }}
+    >
+      <div>
+        <div className=" border border-gray-900 bg-gray-100 p-2">
+          <h2
+            className={` ${
+              !isProbe ? "text-blue-600" : "text-purple-600"
+            }  capitalize font-bold`}
+          >
+            {!isProbe ? "group" : "probe"} - {group.name}
+          </h2>
         </div>
-      )}
+      </div>
+      <div className="flex flex-row">
+        {Boolean(probes.length) && (
+          <div className="basis-1/3">
+            {probes.map((item) => (
+              <div key={item.id}>
+                <Group group={item} depth={depth + 1} isProbe />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {Boolean(groups.length) && (
-        <div>
-          <h1>Groups</h1>
+        <div className="basis-1/3">
           {groups.map((item) => (
-            <div key={item.id}>
-              <Group group={item} depth={depth + 1} />
-            </div>
+            <Group key={item.id} group={item} depth={depth + 1} />
           ))}
         </div>
       )}
       {Boolean(devices.length) && (
-        <div>
-          <h1>Devices</h1>
+        <div className="basis-1/3 flex items-center ml-4 gap-11 my-10">
           {devices.map((item) => (
-            <div>
-              <div className="w-[250]">
-                <p key={item.id}>
-                  <b>Name:</b> {item.name}
-                </p>
-                <Device device={item} />
-              </div>
-            </div>
+            <Device key={item.id} device={item} />
           ))}
         </div>
       )}

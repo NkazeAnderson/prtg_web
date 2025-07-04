@@ -1,27 +1,15 @@
 import { deviceSchema, groupSchema, probeSchema } from "@/schemas";
+import { GroupDeviceChart } from "@/src/components/GroupChart";
 import { DeviceSensorsChart } from "@/src/components/PieChart";
-import { Button } from "@/src/shadcn/components/ui/button";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/src/shadcn/components/ui/navigation-menu";
-import { pullPrtgGraph } from "@/src/utils";
-import { deviceT, groupT } from "@/types";
-import { NavigationMenuItem } from "@radix-ui/react-navigation-menu";
-import Image from "next/image";
+import { parseItemToArray, pullPrtgGraph } from "@/src/utils";
+import { deviceT, groupT, sensorT } from "@/types";
 
 const Device = ({ device }: { device: deviceT }) => {
   return (
-    <div className=" w-[160]">
-      <div className=" border border-gray-900 bg-gray-100 p-2">
-        <h2 className=" text-yellow-800 capitalize font-semibold">
-          device - {device.name}
-        </h2>
+    <div>
+      <div className="">
+        <DeviceSensorsChart device={device} />
       </div>
-      <DeviceSensorsChart device={device} />
     </div>
   );
 };
@@ -35,72 +23,60 @@ const Group = ({
   depth: number;
   isProbe?: boolean;
 }) => {
-  const devices = deviceSchema
-    .array()
-    .parse(
-      !group.device
-        ? []
-        : Array.isArray(group.device)
-        ? group.device
-        : [group.device]
-    );
-  const groups = groupSchema
-    .array()
-    .parse(
-      !group.group
-        ? []
-        : Array.isArray(group.group)
-        ? group.group
-        : [group.group]
-    );
-  const probes = probeSchema
-    .array()
-    .parse(
-      !group.probenode
-        ? []
-        : Array.isArray(group.probenode)
-        ? group.probenode
-        : [group.probenode]
-    );
+  const devices = parseItemToArray(group.device, deviceSchema);
+  const groups = parseItemToArray(group.group, groupSchema);
+  const probes = parseItemToArray(group.probenode, probeSchema);
   return (
     <div
-      className={` border border-green-200 rounded-2xl my-2 self-start flex gap-4`}
+      className={` border border-green-200 rounded-2xl my-2 gap-4 min-w-[170px]`}
       style={{ paddingLeft: depth * 10 }}
     >
+      {/* <div className="grid grid-cols-3">
+        <div className="p-4 border-2 border-gray-400">
+          <h4 className=" text-green-600">Up</h4>
+          <p>
+            <b>Total:</b> {}
+          </p>
+        </div>
+        <div>
+          <h3 className=" text-red-600">Down</h3>
+        </div>
+        <div>
+          <h3 className=" text-yellow-600">Others</h3>
+        </div>
+      </div> */}
       <div>
-        <div className=" border border-gray-900 bg-gray-100 p-2">
-          <h2
+        <div className=" border border-gray-900 bg-gray-100 p-2 w-full">
+          <h4
             className={` ${
               !isProbe ? "text-blue-600" : "text-purple-600"
-            }  capitalize font-bold`}
+            }  capitalize font-bold text-nowrap`}
           >
             {!isProbe ? "group" : "probe"} - {group.name}
-          </h2>
+          </h4>
         </div>
       </div>
+      {/* {Boolean(devices.length) && (
+        <div className="grid grid-cols-3 ml-4 gap-11 my-10">
+          {devices.map((item) => (
+            <Device key={item.id} device={item} />
+          ))}
+        </div>
+      )} */}
+      <GroupDeviceChart group={group} />
       <div className="flex flex-row">
-        {Boolean(probes.length) && (
-          <div className="basis-1/3">
-            {probes.map((item) => (
-              <div key={item.id}>
-                <Group group={item} depth={depth + 1} isProbe />
-              </div>
-            ))}
-          </div>
-        )}
+        {Boolean(probes.length) &&
+          probes.map((item) => (
+            <div key={item.id} className="flex-1">
+              <Group group={item} depth={depth + 1} isProbe />
+            </div>
+          ))}
       </div>
 
       {Boolean(groups.length) && (
-        <div className="basis-1/3">
+        <div className="flex flex-row">
           {groups.map((item) => (
             <Group key={item.id} group={item} depth={depth + 1} />
-          ))}
-        </div>
-      )}
-      {Boolean(devices.length) && (
-        <div className="basis-1/3 flex items-center ml-4 gap-11 my-10">
-          {devices.map((item) => (
-            <Device key={item.id} device={item} />
           ))}
         </div>
       )}
@@ -111,21 +87,13 @@ const Group = ({
 export default async function Home() {
   const graph = await pullPrtgGraph();
   const rootGroup = graph.prtg.sensortree.nodes.group;
-  console.log({ rootGroup });
 
   return (
-    <div className="w-screen h-screen overflow-scroll">
-      <div className="p-4 bg-gray-700 text-white font-semibold">
-        <NavigationMenu>
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <NavigationMenuLink>Devices</NavigationMenuLink>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
-      </div>
-      <div className=" container p-4">
-        <Group group={rootGroup} depth={0} />
+    <div className=" p-4">
+      <div className="w-full overflow-x-auto">
+        <div className=" container p-4">
+          <Group group={rootGroup} depth={0} />
+        </div>
       </div>
     </div>
   );

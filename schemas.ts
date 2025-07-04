@@ -3,7 +3,7 @@ import z from "zod/v4";
 const stringSchema = z.string();
 const numberSchema = z.number();
 const booleanSchema = z.boolean();
-const upDownSchema = z.enum(["Up", "Down"]);;
+const upDownSchema = z.enum(["Up", "Down", "Warning", "Down (Partial)", "Down (Acknowledged)",  "Unusual", "Paused", "Unknown"]);
 
 const commonSchema = z.object({
 name: stringSchema,

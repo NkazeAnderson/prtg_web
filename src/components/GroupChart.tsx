@@ -1,7 +1,7 @@
 "use client";
 
 import { TrendingUp } from "lucide-react";
-import { Label, Pie, PieChart, Sector } from "recharts";
+import { Cell, Label, LabelList, Pie, PieChart, Sector } from "recharts";
 import { PieSectorDataItem } from "recharts/types/polar/Pie";
 import {
   ChartConfig,
@@ -9,38 +9,33 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/src/shadcn/components/ui/chart";
-import { deviceT } from "@/types";
+import { deviceT, groupT } from "@/types";
 
 export const description = "A donut chart with an active sector";
 
-const chartConfig = {
-  visitors: {
-    label: "Visitors",
-  },
-  Up: {
-    label: "UP",
-    color: "var(--chart-1)",
-  },
-  Down: {
-    label: "UP",
-    color: "var(--chart-2)",
-  },
-  firefox: {
-    label: "Firefox",
-    color: "var(--chart-3)",
-  },
-  edge: {
-    label: "Edge",
-    color: "var(--chart-4)",
-  },
-  other: {
-    label: "Other",
-    color: "var(--chart-5)",
-  },
-} satisfies ChartConfig;
+export function GroupDeviceChart({ group }: { group: groupT }) {
+  if (!group.device || !group.device.length) {
+    return null;
+  }
+  const chartConfig: ChartConfig = {};
 
-export function DeviceSensorsChart({ device }: { device: deviceT }) {
-  const sensors = device.sensor;
+  const data = group.device.map((item) => {
+    chartConfig[item.name] = {
+      label: item.name,
+      color: "black",
+    };
+    return {
+      ...item,
+      fill: item.sensor.some((item) => item.status === "Down")
+        ? "red"
+        : item.sensor.some((item) => item.status !== "Up")
+        ? "yellow"
+        : "green",
+      active: 1,
+      outerRadius: item.sensor.some((item) => item.status === "Down") ? 65 : 60,
+    };
+  });
+  console.log(chartConfig);
   return (
     <ChartContainer
       config={chartConfig}
@@ -49,34 +44,30 @@ export function DeviceSensorsChart({ device }: { device: deviceT }) {
       <PieChart>
         <ChartTooltip
           cursor={false}
-          content={<ChartTooltipContent hideLabel />}
+          content={<ChartTooltipContent labelKey="name" hidden />}
         />
         <Pie
-          data={sensors.map((item) => ({
-            ...item,
-            fill:
-              item.status === "Up"
-                ? "green"
-                : item.status === "Down"
-                ? "red"
-                : "yellow",
-            active: item.status_raw,
-          }))}
+          data={data}
           dataKey="active"
           nameKey="name"
           innerRadius={50}
-          strokeWidth={10}
           outerRadius={60}
           activeShape={({ outerRadius = 0, ...props }: PieSectorDataItem) => (
             <Sector {...props} outerRadius={outerRadius + 10} />
           )}
-        />
+          paddingAngle={3}
+        ></Pie>
         <Label
-          content={({ viewBox }) => {
+          content={() => {
             return (
-              <text x={80} y={80} textAnchor="middle" dominantBaseline="middle">
+              <text
+                x={"50%"}
+                y={"50%"}
+                textAnchor="middle"
+                dominantBaseline="middle"
+              >
                 <tspan className="fill-foreground text-sm font-bold">
-                  {device.name}
+                  {group.name}
                 </tspan>
                 {/* <tspan
                         x={viewBox.cx}

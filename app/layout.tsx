@@ -9,6 +9,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/src/shadcn/components/ui/navigation-menu";
+import { Input } from "@/src/shadcn/components/ui/input";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,7 +38,7 @@ export default function RootLayout({
       >
         <div className=" w-screen h-screen overflow-y-scroll overflow-x-hidden relative">
           <header className="sticky top-0 z-[9999]">
-            <nav className="p-4 bg-gray-700 text-white font-semibold ">
+            <nav className="p-4 bg-gray-700 text-white font-semibold  flex w-full justify-between">
               <NavigationMenu>
                 <NavigationMenuList>
                   <NavigationMenuItem>
@@ -45,6 +46,7 @@ export default function RootLayout({
                   </NavigationMenuItem>
                 </NavigationMenuList>
               </NavigationMenu>
+              <Input className=" bg-white w-[500]" placeholder="Search" />
             </nav>
           </header>
 

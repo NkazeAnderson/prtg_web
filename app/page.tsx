@@ -28,7 +28,7 @@ const Group = ({
   const probes = parseItemToArray(group.probenode, probeSchema);
   return (
     <div
-      className={` border border-green-200 rounded-2xl my-2 gap-4 min-w-[170px]`}
+      className={`rounded-2xl my-2 gap-4 min-w-[170px] `}
       style={{ paddingLeft: depth * 10 }}
     >
       {/* <div className="grid grid-cols-3">
@@ -47,13 +47,13 @@ const Group = ({
       </div> */}
       <div>
         <div className=" border border-gray-900 bg-gray-100 p-2 w-full">
-          <h4
+          <h5
             className={` ${
               !isProbe ? "text-blue-600" : "text-purple-600"
-            }  capitalize font-bold text-nowrap`}
+            }  capitalize font-medium text-nowrap`}
           >
-            {!isProbe ? "group" : "probe"} - {group.name}
-          </h4>
+            {group.name}
+          </h5>
         </div>
       </div>
       {/* {Boolean(devices.length) && (
@@ -74,7 +74,7 @@ const Group = ({
       </div>
 
       {Boolean(groups.length) && (
-        <div className="flex flex-row">
+        <div className="flex flex-row flex-wrap gap-3 justify-center">
           {groups.map((item) => (
             <Group key={item.id} group={item} depth={depth + 1} />
           ))}
@@ -90,6 +90,14 @@ export default async function Home() {
 
   return (
     <div className=" p-4">
+      <div className=" flex gap-4">
+        <div className=" flex gap-4">
+          <p>Up</p>
+        </div>
+        <div className=" flex gap-4">
+          <p>Down</p>
+        </div>
+      </div>
       <div className="w-full overflow-x-auto">
         <div className=" container p-4">
           <Group group={rootGroup} depth={0} />

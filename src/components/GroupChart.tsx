@@ -35,7 +35,6 @@ export function GroupDeviceChart({ group }: { group: groupT }) {
       outerRadius: item.sensor.some((item) => item.status === "Down") ? 65 : 60,
     };
   });
-  console.log(chartConfig);
   return (
     <ChartContainer
       config={chartConfig}

@@ -38,7 +38,7 @@ To test and validate data coming from other systems
   "npm run dev"   
 
 5. Open localhost to access the webpage  
-   "localhost:5000" 
+   "localhost:5000".
 
 
 # Schemas:

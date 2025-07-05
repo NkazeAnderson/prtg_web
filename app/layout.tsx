@@ -36,21 +36,24 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className=" w-screen h-screen overflow-y-scroll overflow-x-hidden relative">
-          <header className="sticky top-0 z-[9999]">
-            <nav className="p-4 bg-gray-700 text-white font-semibold  flex w-full justify-between">
-              <NavigationMenu>
-                <NavigationMenuList>
-                  <NavigationMenuItem>
-                    <NavigationMenuLink href="/">Devices</NavigationMenuLink>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
-              <Input className=" bg-white w-[500]" placeholder="Search" />
-            </nav>
-          </header>
-
-          <main>{children}</main>
+        <div className=" w-screen h-screen overflow-hidden fixed">
+          <div className="flex flex-col h-full">
+            <header className="">
+              <nav className="p-4 bg-gray-700 text-white font-semibold  flex w-full justify-between">
+                <NavigationMenu>
+                  <NavigationMenuList>
+                    <NavigationMenuItem>
+                      <NavigationMenuLink href="/">Devices</NavigationMenuLink>
+                    </NavigationMenuItem>
+                  </NavigationMenuList>
+                </NavigationMenu>
+                <Input className=" bg-white w-[500]" placeholder="Search" />
+              </nav>
+            </header>
+            <main className="w-full flex-1 ">
+              <div className="w-full h-full fixed">{children}</div>
+            </main>
+          </div>
         </div>
       </body>
     </html>

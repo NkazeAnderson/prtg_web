@@ -10,16 +10,24 @@ import {
   ChartTooltipContent,
 } from "@/src/shadcn/components/ui/chart";
 import { deviceT, groupT } from "@/types";
+import { parseItemToArray } from "../utils";
+import { groupSchema, probeSchema } from "@/schemas";
 
 export const description = "A donut chart with an active sector";
 
-export function GroupDeviceChart({ group }: { group: groupT }) {
+export function GroupDeviceChart({
+  group,
+  depth,
+}: {
+  group: groupT;
+  depth: number;
+}) {
   if (!group.device || !group.device.length) {
     return null;
   }
   const chartConfig: ChartConfig = {};
 
-  const data = group.device.map((item) => {
+  const data = group.device?.map((item) => {
     chartConfig[item.name] = {
       label: item.name,
       color: "black",
@@ -35,6 +43,7 @@ export function GroupDeviceChart({ group }: { group: groupT }) {
       outerRadius: item.sensor.some((item) => item.status === "Down") ? 65 : 60,
     };
   });
+
   return (
     <ChartContainer
       config={chartConfig}

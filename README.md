@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Project: 
+This is a JavaScript application which is a customized interphase for PTRG 
 
-## Getting Started
+# Use Case: 
+In this project we make use of APIs on our webpage to monitor and maintain network availaibility across different regions.
 
-First, run the development server:
+# Packages Used:
+Typescript :
+To extend Javascript functionalities
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+JavaScript: 
+Nodejs:
+To serve as a framework or daemon for javascript
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Nextjs:
+Provides a framework for our application to run it's front-end and backend simulthaneously
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Shadcn:
+As a component library with premade templates we can easily modify
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Utils: 
+For background utilities to write functions that perform a specific action
+We made se o an env.local file for our "API KEY" and "HOST IP"
 
-## Learn More
+Zod:
+To test and validate data coming from other systems
 
-To learn more about Next.js, take a look at the following resources:
+# Steps
+1. Install node 
+    "node"
+2. Install nextjs
+    "npx create-next-app@latest" 
+    This creates the necessary files an folders for nextjs to run smoothly
+3. To install the necessary dependencies for Typescript and JavaScript, then records them in the package.json file
+   "npm i" 
+            
+4. Start the project in dev mode 
+  "npm run dev"   
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. Open localhost to access the webpage  
+   "localhost:5000" 
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Schemas:
+We made use of schemas to define common variables to the serverm, root, probe, group, and device   

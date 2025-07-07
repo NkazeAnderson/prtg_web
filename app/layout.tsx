@@ -10,6 +10,10 @@ import {
   NavigationMenuTrigger,
 } from "@/src/shadcn/components/ui/navigation-menu";
 import { Input } from "@/src/shadcn/components/ui/input";
+import { parseItemToArray, pullPrtgGraph } from "@/src/utils";
+import { groupT } from "@/types";
+import { groupSchema } from "@/schemas";
+import DataContextProvider from "@/src/components/DataContextProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,11 +30,41 @@ export const metadata: Metadata = {
   description: "Customized Prtg web interface by Orion Tech Group",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const graph = await pullPrtgGraph();
+  const rootGroup = graph.prtg.sensortree.nodes.group;
+  let depth = 0;
+  let flattenedGroup: (groupT & { depth: number; parent: number })[] = [];
+  let parent = rootGroup.id;
+  function flattenGroup(root: any) {
+    if (typeof root === "object") {
+      parent = root.id;
+    }
+    const groups = parseItemToArray(root, groupSchema);
+
+    const newGroups = groups.map((item) => ({
+      ...item,
+      parent,
+      depth,
+    }));
+    flattenedGroup = [...flattenedGroup, ...newGroups];
+    groups.forEach((g) => {
+      if (g.group) {
+        depth = depth + 1;
+        flattenGroup(g.group);
+      }
+      if (g.probenode) {
+        depth = depth + 1;
+        flattenGroup(g.probenode);
+      }
+    });
+  }
+  flattenGroup(rootGroup);
+  console.log(flattenedGroup);
   return (
     <html lang="en">
       <body
@@ -51,7 +85,11 @@ export default function RootLayout({
               </nav>
             </header>
             <main className="w-full flex-1 ">
-              <div className="w-full h-full fixed">{children}</div>
+              <div className="w-full h-full fixed">
+                <DataContextProvider groups={flattenedGroup}>
+                  {children}
+                </DataContextProvider>
+              </div>
             </main>
           </div>
         </div>

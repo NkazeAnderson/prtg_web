@@ -6,6 +6,8 @@ import { PieSectorDataItem } from "recharts/types/polar/Pie";
 import {
   ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/src/shadcn/components/ui/chart";
@@ -20,11 +22,13 @@ export function GroupDeviceChart({
   depth,
   width = 160,
   filters = [],
+  showLegend,
 }: {
   group: groupT;
   depth?: number;
   width?: number;
   filters?: sensorStatusT[];
+  showLegend?: boolean;
 }) {
   if (!group.device || !group.device.length) {
     return null;
@@ -61,7 +65,7 @@ export function GroupDeviceChart({
   return (
     <ChartContainer
       config={chartConfig}
-      className="mx-auto aspect-square border"
+      className="mx-auto aspect-square border relative"
       style={{ maxWidth: group.name === "Root" ? width : width / 2 }}
     >
       <PieChart>
@@ -80,6 +84,15 @@ export function GroupDeviceChart({
           )}
           paddingAngle={3}
         ></Pie>
+        {showLegend && (
+          <ChartLegend
+            content={
+              //@ts-ignore
+              <ChartLegendContent nameKey="name" />
+            }
+            className="flex-wrap gap-2 *:basis-1/4 *:justify-center absolute top-full w-full my-4 border-y-2 py-4 border-gray-300"
+          />
+        )}
         <Label
           content={() => {
             return (

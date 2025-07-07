@@ -6,6 +6,8 @@ import { useDataContext } from "./DataContextProvider";
 import { GroupDeviceChart } from "./GroupChart";
 import { Checkbox } from "../shadcn/components/ui/checkbox";
 import { sensorStatus } from "../constants.ts";
+import { parseItemToArray } from "../utils";
+import { groupSchema } from "@/schemas";
 
 function HomePageDashboard() {
   const groups = useDataContext();
@@ -21,6 +23,7 @@ function HomePageDashboard() {
       setMainSectionWidth(mainSection.current.offsetWidth);
     }
     console.log("width", mainSection.current?.offsetWidth);
+    groups?.length && setActiveGroup(groups[0]);
   }, []);
 
   return (
@@ -48,9 +51,34 @@ function HomePageDashboard() {
           {activeGroup ? activeGroup.name : "Root"}
         </h1>
         <div
-          className="flex flex-wrap gap-4 w-full h-[80vh] justify-center items-center"
+          className="flex flex-wrap gap-4 w-full h-[80vh] justify-center items-center relative"
           ref={mainSection}
         >
+          {activeGroup?.group && (
+            <div className="absolute  right-2 top-2  border">
+              <div className=" bg-gray-600 text-white">
+                <h4>Sub Groups</h4>
+              </div>
+              <div className="p-4">
+                {parseItemToArray(activeGroup.group, groupSchema).map(
+                  (subgroup) => {
+                    return (
+                      <p
+                        key={subgroup.id}
+                        className=" capitalize font-bold hover:cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveGroup(subgroup);
+                        }}
+                      >
+                        * {subgroup.name}
+                      </p>
+                    );
+                  }
+                )}
+              </div>
+            </div>
+          )}
           {groups
             .filter((item) =>
               activeGroup
@@ -58,34 +86,33 @@ function HomePageDashboard() {
                 : true
             )
             .map((item, index) => (
-              <div>
-                <div
-                  key={index}
-                  className={`rounded-2xl my-2 gap-4  `}
-                  style={{
-                    width:
-                      activeGroup?.name === "Root"
-                        ? mainSectionWidth / 3
-                        : mainSectionWidth,
-                  }}
-                  onClick={(e) => {
-                    activeGroup &&
-                      activeGroup.id !== item.id &&
-                      setActiveGroup(item);
-                    e.stopPropagation();
-                  }}
-                >
-                  <GroupDeviceChart
-                    group={item}
-                    depth={1}
-                    width={
-                      activeGroup?.name === "Root"
-                        ? mainSectionWidth / 3
-                        : mainSectionWidth
-                    }
-                    filters={sensorStatusFilters}
-                  />
-                </div>
+              <div
+                key={index}
+                className={`rounded-2xl my-2 gap-4  `}
+                style={{
+                  width:
+                    activeGroup?.name === "Root"
+                      ? mainSectionWidth / 3
+                      : mainSectionWidth,
+                }}
+                onClick={(e) => {
+                  activeGroup &&
+                    activeGroup.id !== item.id &&
+                    setActiveGroup(item);
+                  e.stopPropagation();
+                }}
+              >
+                <GroupDeviceChart
+                  group={item}
+                  depth={1}
+                  width={
+                    activeGroup?.name === "Root"
+                      ? mainSectionWidth / 3
+                      : mainSectionWidth
+                  }
+                  filters={sensorStatusFilters}
+                  showLegend={activeGroup?.name !== "Root"}
+                />
               </div>
             ))}
         </div>

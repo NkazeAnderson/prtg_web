@@ -9,7 +9,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/src/shadcn/components/ui/chart";
-import { deviceT, groupT } from "@/types";
+import { deviceT, groupT, sensorStatusT } from "@/types";
 import { parseItemToArray } from "../utils";
 import { groupSchema, probeSchema } from "@/schemas";
 
@@ -18,36 +18,51 @@ export const description = "A donut chart with an active sector";
 export function GroupDeviceChart({
   group,
   depth,
+  width = 160,
+  filters = [],
 }: {
   group: groupT;
-  depth: number;
+  depth?: number;
+  width?: number;
+  filters?: sensorStatusT[];
 }) {
   if (!group.device || !group.device.length) {
     return null;
   }
   const chartConfig: ChartConfig = {};
+  const outerRadius = width / 4 - 15;
 
-  const data = group.device?.map((item) => {
-    chartConfig[item.name] = {
-      label: item.name,
-      color: "black",
-    };
-    return {
-      ...item,
-      fill: item.sensor.some((item) => item.status === "Down")
-        ? "red"
-        : item.sensor.some((item) => item.status !== "Up")
-        ? "yellow"
-        : "green",
-      active: 1,
-      outerRadius: item.sensor.some((item) => item.status === "Down") ? 65 : 60,
-    };
-  });
+  const data = group.device
+    ?.filter((item) => {
+      if (filters.length) {
+        return item.sensor.some((sensor) => filters.includes(sensor.status));
+      }
+      return true;
+    })
+    .map((item) => {
+      chartConfig[item.name] = {
+        label: item.name,
+        color: "black",
+      };
+      return {
+        ...item,
+        fill: item.sensor.some((item) => item.status === "Down")
+          ? "red"
+          : item.sensor.some((item) => item.status !== "Up")
+          ? "yellow"
+          : "green",
+        active: 1,
+        outerRadius: item.sensor.some((item) => item.status === "Down")
+          ? 65
+          : 60,
+      };
+    });
 
   return (
     <ChartContainer
       config={chartConfig}
-      className="mx-auto aspect-square  max-h-[160px] border"
+      className="mx-auto aspect-square border"
+      style={{ maxWidth: group.name === "Root" ? width : width / 2 }}
     >
       <PieChart>
         <ChartTooltip
@@ -58,8 +73,8 @@ export function GroupDeviceChart({
           data={data}
           dataKey="active"
           nameKey="name"
-          innerRadius={50}
-          outerRadius={60}
+          innerRadius={outerRadius - 20}
+          outerRadius={outerRadius}
           activeShape={({ outerRadius = 0, ...props }: PieSectorDataItem) => (
             <Sector {...props} outerRadius={outerRadius + 10} />
           )}

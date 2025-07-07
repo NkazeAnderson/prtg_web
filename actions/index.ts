@@ -1,7 +1,7 @@
 
 "use server"
 
-import { pullPrtgGraph } from "../utils";
+import { pullPrtgGraph } from "../src/utils";
 
 export async function getffromserver() {
   return await pullPrtgGraph();

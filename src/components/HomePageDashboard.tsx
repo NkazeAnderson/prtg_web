@@ -1,6 +1,6 @@
 "use client";
 
-import { groupT } from "@/types";
+import { groupT, sensorStatusT } from "@/types";
 import React, { Ref, RefObject, useEffect, useRef, useState } from "react";
 import { useDataContext } from "./DataContextProvider";
 import { GroupDeviceChart } from "./GroupChart";
@@ -11,10 +11,17 @@ function HomePageDashboard() {
   const groups = useDataContext();
   const [activeGroup, setActiveGroup] = useState<groupT>();
   const [mainSectionWidth, setMainSectionWidth] = useState(0);
-  const [sensorStatusFilters, setSensorStatusFilters] = useState([]);
+  const [sensorStatusFilters, setSensorStatusFilters] = useState<
+    sensorStatusT[]
+  >([]);
   const mainSection = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    if (mainSection.current) {
+      setMainSectionWidth(mainSection.current.offsetWidth);
+    }
+    console.log("width", mainSection.current?.offsetWidth);
+  }, []);
 
   return (
     <div className=" container p-4 flex flex-row h-full">
@@ -34,7 +41,7 @@ function HomePageDashboard() {
         ))}
       </div>
       <div
-        className=" flex-[2] border rounded-r-3xl h-[80vh] overflow-y-scroll"
+        className=" flex-[2] border rounded-r-3xl h-[80vh] overflow-y-scroll overflow-x-hidden"
         ref={mainSection}
       >
         <h1 className=" text-center capitalize">
@@ -54,10 +61,30 @@ function HomePageDashboard() {
               <div>
                 <div
                   key={index}
-                  className={`rounded-2xl my-2 gap-4 min-w-[170px] `}
-                  //   style={{ paddingLeft: depth * 10 }}
+                  className={`rounded-2xl my-2 gap-4  `}
+                  style={{
+                    width:
+                      activeGroup?.name === "Root"
+                        ? mainSectionWidth / 3
+                        : mainSectionWidth,
+                  }}
+                  onClick={(e) => {
+                    activeGroup &&
+                      activeGroup.id !== item.id &&
+                      setActiveGroup(item);
+                    e.stopPropagation();
+                  }}
                 >
-                  <GroupDeviceChart group={item} depth={1} />
+                  <GroupDeviceChart
+                    group={item}
+                    depth={1}
+                    width={
+                      activeGroup?.name === "Root"
+                        ? mainSectionWidth / 3
+                        : mainSectionWidth
+                    }
+                    filters={sensorStatusFilters}
+                  />
                 </div>
               </div>
             ))}
@@ -65,13 +92,24 @@ function HomePageDashboard() {
       </div>
       <div className=" flex-1  px-2">
         <h1>Filters</h1>
-        {sensorStatus.map((item) => (
-          <div className="flex flex-row gap-4 p-2">
-            <Checkbox />
-            <p className=" font-semibold">{item}</p>
+        {sensorStatus.map((status) => (
+          <div className="flex flex-row gap-4 p-2 items-center">
+            <Checkbox
+              checked={sensorStatusFilters.includes(status)}
+              onCheckedChange={(checked) => {
+                setSensorStatusFilters((prev) => {
+                  if (checked && !sensorStatusFilters.includes(status)) {
+                    return [...prev, status];
+                  } else if (!checked && sensorStatusFilters.includes(status)) {
+                    return prev.filter((item) => item !== status);
+                  }
+                  return prev;
+                });
+              }}
+            />
+            <p className=" font-semibold">{status}</p>
           </div>
         ))}
-        <Checkbox />
       </div>
     </div>
   );

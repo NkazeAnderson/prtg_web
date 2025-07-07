@@ -1,9 +1,10 @@
 import z from "zod/v4";
+import { sensorStatus } from "./src/constants.ts";
 
 const stringSchema = z.string();
 const numberSchema = z.number();
 const booleanSchema = z.boolean();
-const upDownSchema = z.enum(["Up", "Down", "Warning", "Down (Partial)", "Down (Acknowledged)",  "Unusual", "Paused", "Unknown"]);
+const upDownSchema = z.enum(sensorStatus);
 
 const commonSchema = z.object({
 name: stringSchema,

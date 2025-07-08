@@ -14,6 +14,8 @@ import {
 import { deviceT, groupT, sensorStatusT } from "@/types";
 import { parseItemToArray } from "../utils";
 import { groupSchema, probeSchema } from "@/schemas";
+import { DeviceSensorsChart } from "./DeviceChart";
+import { useState } from "react";
 
 export const description = "A donut chart with an active sector";
 
@@ -23,12 +25,16 @@ export function GroupDeviceChart({
   width = 160,
   filters = [],
   showLegend,
+  activeDevice,
+  setActiveDevice,
 }: {
   group: groupT;
   depth?: number;
   width?: number;
   filters?: sensorStatusT[];
   showLegend?: boolean;
+  activeDevice?: deviceT;
+  setActiveDevice: (device?: deviceT) => void;
 }) {
   if (!group.device || !group.device.length) {
     return null;
@@ -62,61 +68,83 @@ export function GroupDeviceChart({
       };
     });
 
+  if (activeDevice) {
+    return (
+      <>
+        <DeviceSensorsChart device={activeDevice} width={width - 20} />
+      </>
+    );
+  }
+
   return (
-    <ChartContainer
-      config={chartConfig}
-      className="mx-auto aspect-square border relative"
-      style={{ maxWidth: group.name === "Root" ? width : width / 2 }}
-    >
-      <PieChart>
-        <ChartTooltip
-          cursor={false}
-          content={<ChartTooltipContent labelKey="name" hidden />}
-        />
-        <Pie
-          data={data}
-          dataKey="active"
-          nameKey="name"
-          innerRadius={outerRadius - 20}
-          outerRadius={outerRadius}
-          activeShape={({ outerRadius = 0, ...props }: PieSectorDataItem) => (
-            <Sector {...props} outerRadius={outerRadius + 10} />
-          )}
-          paddingAngle={3}
-        ></Pie>
-        {showLegend && (
-          <ChartLegend
-            content={
-              //@ts-ignore
-              <ChartLegendContent nameKey="name" />
-            }
-            className="flex-wrap gap-2 *:basis-1/4 *:justify-center absolute top-full w-full my-4 border-y-2 py-4 border-gray-300"
+    <>
+      <ChartContainer
+        config={chartConfig}
+        className="mx-auto aspect-square border relative"
+        style={{ maxWidth: group.name === "Root" ? width : width / 2 }}
+      >
+        <PieChart>
+          <ChartTooltip
+            cursor={false}
+            content={<ChartTooltipContent labelKey="name" hidden />}
           />
-        )}
-        <Label
-          content={() => {
-            return (
-              <text
-                x={"50%"}
-                y={"50%"}
-                textAnchor="middle"
-                dominantBaseline="middle"
+          <Pie
+            data={data}
+            dataKey="active"
+            nameKey="name"
+            innerRadius={outerRadius - 20}
+            outerRadius={outerRadius}
+            activeShape={({ outerRadius = 0, ...props }: PieSectorDataItem) => (
+              <Sector
+                {...props}
+                outerRadius={outerRadius + 10}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  showLegend && setActiveDevice(props.payload);
+                }}
+              />
+            )}
+            paddingAngle={3}
+          ></Pie>
+          <Label
+            content={() => {
+              return (
+                <text
+                  x={"50%"}
+                  y={"50%"}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                >
+                  <tspan className="fill-foreground text-sm font-bold">
+                    {group.name}
+                  </tspan>
+                </text>
+              );
+            }}
+          />
+        </PieChart>
+      </ChartContainer>
+      {showLegend && (
+        <div className="">
+          <h4 className=" text-center">Devices</h4>
+          <div className="flex-wrap gap-2 *:basis-1/4 *:justify-center top-full w-full my-4 border-y-2 py-4 border-gray-300 flex">
+            {data.map((item, index) => (
+              <div
+                className=" flex flex-row items-center gap-3 hover:cursor-pointer"
+                onClick={() => {
+                  setActiveDevice(group.device?.[index]);
+                }}
               >
-                <tspan className="fill-foreground text-sm font-bold">
-                  {group.name}
-                </tspan>
-                {/* <tspan
-                        x={viewBox.cx}
-                        y={(viewBox.cy || 0) + 24}
-                        className="fill-muted-foreground"
-                      >
-                        Visitors
-                      </tspan> */}
-              </text>
-            );
-          }}
-        />
-      </PieChart>
-    </ChartContainer>
+                <div
+                  className="size-4"
+                  style={{ backgroundColor: item.fill }}
+                ></div>
+                <p>{item.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 }

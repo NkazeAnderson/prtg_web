@@ -11,7 +11,7 @@ import {
 } from "@/src/shadcn/components/ui/navigation-menu";
 import { Input } from "@/src/shadcn/components/ui/input";
 import { parseItemToArray, pullPrtgGraph } from "@/src/utils";
-import { groupT } from "@/types";
+import { classificationT, groupT } from "@/types";
 import { groupSchema } from "@/schemas";
 import DataContextProvider from "@/src/components/DataContextProvider";
 
@@ -40,18 +40,37 @@ export default async function RootLayout({
   let depth = 0;
   let flattenedGroup: (groupT & { depth: number; parent: number })[] = [];
   let parent = rootGroup.id;
+
   function flattenGroup(root: any) {
     if (typeof root === "object") {
       parent = root.id;
     }
-    const groups = parseItemToArray(root, groupSchema);
+    const groups: groupT[] = parseItemToArray(root, groupSchema);
+
+    const classification: groupT["classification"] = groups[0].classification
+      ? groups[0].classification
+      : groups[0].name.toLowerCase().includes("connect")
+      ? "connect"
+      : groups[0].name.toLowerCase().includes("vsat")
+      ? "vsat"
+      : groups[0].name.toLowerCase().includes("root") ||
+        groups[0].probenode ||
+        root.probenode
+      ? undefined
+      : groups.some((item) => item.name.includes("probe")) ||
+        groups[0].probenode
+      ? undefined
+      : "main";
+
+    console.log(classification, groups[0].name.toLowerCase());
 
     const newGroups = groups.map((item) => ({
       ...item,
       parent,
       depth,
+      classification,
     }));
-    
+
     flattenedGroup = [...flattenedGroup, ...newGroups];
     groups.forEach((g) => {
       if (g.group) {
@@ -65,7 +84,7 @@ export default async function RootLayout({
     });
   }
   flattenGroup(rootGroup);
-  console.log(flattenedGroup);
+
   return (
     <html lang="en">
       <body
@@ -85,12 +104,10 @@ export default async function RootLayout({
                 <Input className=" bg-white w-[500]" placeholder="Search" />
               </nav>
             </header>
-            <main className="w-full flex-1 ">
-              <div className="w-full h-full fixed">
-                <DataContextProvider groups={flattenedGroup}>
-                  {children}
-                </DataContextProvider>
-              </div>
+            <main className="w-full flex-1 border-4 border-amber-500">
+              <DataContextProvider groups={flattenedGroup}>
+                {children}
+              </DataContextProvider>
             </main>
           </div>
         </div>

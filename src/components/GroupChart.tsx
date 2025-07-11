@@ -13,18 +13,23 @@ import {
 } from "@/src/shadcn/components/ui/chart";
 import { deviceT, groupT, sensorStatusT } from "@/types";
 import { parseItemToArray } from "../utils";
-import { groupSchema, probeSchema } from "@/schemas";
+import {
+  deviceSchema,
+  groupSchema,
+  probeSchema,
+  sensorSchema,
+} from "@/schemas";
 import { DeviceSensorsChart } from "./DeviceChart";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const description = "A donut chart with an active sector";
 
 export function GroupDeviceChart({
   group,
   depth,
-  width = 160,
+  width = 500,
   filters = [],
-  showLegend,
+  showLegend = true,
   activeDevice,
   setActiveDevice,
 }: {
@@ -34,54 +39,124 @@ export function GroupDeviceChart({
   filters?: sensorStatusT[];
   showLegend?: boolean;
   activeDevice?: deviceT;
+  activeGroup?: groupT;
   setActiveDevice: (device?: deviceT) => void;
 }) {
-  if (!group.device || !group.device.length) {
-    return null;
-  }
+  const [finalData, setFinalData] = useState(group);
+  const [hardRefresh, setHardRefresh] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const prev = useRef<groupT | deviceT | undefined>(undefined);
+
   const chartConfig: ChartConfig = {};
-  const outerRadius = width / 4 - 15;
+  const outerRadius = width / 2 - 15;
 
-  const data = group.device
-    ?.filter((item) => {
-      if (filters.length) {
-        return item.sensor.some((sensor) => filters.includes(sensor.status));
-      }
-      return true;
-    })
-    .map((item) => {
-      chartConfig[item.name] = {
-        label: item.name,
-        color: "black",
-      };
-      return {
-        ...item,
-        fill: item.sensor.some((item) => item.status === "Down")
-          ? "red"
-          : item.sensor.some((item) => item.status !== "Up")
-          ? "yellow"
-          : "green",
-        active: 1,
-        outerRadius: item.sensor.some((item) => item.status === "Down")
-          ? 65
-          : 60,
-      };
-    });
+  function getGroupState(group: groupT, isdevice?: boolean) {
+    //@ts-ignore
+    if (isdevice || group.sensor) {
+      const device = group as deviceT;
+      const base = parseItemToArray(device.sensor, sensorSchema);
+      return base.some((item) => item.status === "Down")
+        ? "red"
+        : base.some((item) => item.status !== "Up")
+        ? "yellow"
+        : "green";
+    }
+    if (group.device) {
+      const base = parseItemToArray(group.device, deviceSchema);
+      return base.some((groupItem) => {
+        const sensors = parseItemToArray(groupItem?.sensor, sensorSchema);
+        return sensors.some((item) => item.status === "Down");
+      })
+        ? "red"
+        : base.some((groupItem) => {
+            const sensors = parseItemToArray(groupItem?.sensor, sensorSchema);
+            return sensors.some((item) => item.status !== "Up");
+          })
+        ? "yellow"
+        : "green";
+    }
 
-  if (activeDevice) {
-    return (
-      <>
-        <DeviceSensorsChart device={activeDevice} width={width - 20} />
-      </>
-    );
+    if (group.group) {
+      parseItemToArray(group.group, groupSchema)?.forEach((item) => {
+        getGroupState(item);
+      });
+    }
   }
 
+  function prepareData(data: groupT | deviceT) {
+    const groupData =
+      //@ts-ignore
+      data.group?.map((item) => {
+        chartConfig[item.name] = {
+          label: item.name,
+          color: "green",
+        };
+        return {
+          ...item,
+          fill: getGroupState(item),
+          active: 1,
+        };
+      }) ?? [];
+
+    const deviceData =
+      //@ts-ignore
+      data.device?.map((item) => {
+        chartConfig[item.name] = {
+          label: item.name,
+          color: "black",
+        };
+        return {
+          ...item,
+          fill: getGroupState(item, true),
+          active: 1,
+        };
+      }) ?? [];
+    const sensorData =
+      //@ts-ignore
+      data.sensor?.map((item) => {
+        chartConfig[item.name] = {
+          label: item.name,
+          color: "black",
+        };
+        return {
+          ...item,
+          fill: getGroupState(item, true),
+          active: 1,
+        };
+      }) ?? [];
+
+    return [...groupData, ...deviceData, ...sensorData];
+  }
+
+  useEffect(() => {
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (loaded) {
+      setHardRefresh(true);
+    }
+  }, [finalData]);
+
+  const data = prepareData(finalData).flatMap((item) => item);
   return (
     <>
+      {prev.current && (
+        <div
+          className=" absolute z-50"
+          onClick={() => {
+            //@ts-ignore
+            setFinalData(prev.current);
+            console.log(prev.current);
+          }}
+        >
+          <img src="/arrow-left.svg" width={50} height={50} />
+        </div>
+      )}
       <ChartContainer
         config={chartConfig}
         className="mx-auto aspect-square border relative"
-        style={{ maxWidth: group.name === "Root" ? width : width / 2 }}
+        style={{ maxWidth: width }}
       >
         <PieChart>
           <ChartTooltip
@@ -92,7 +167,7 @@ export function GroupDeviceChart({
             data={data}
             dataKey="active"
             nameKey="name"
-            innerRadius={outerRadius - 20}
+            innerRadius={outerRadius - 40}
             outerRadius={outerRadius}
             activeShape={({ outerRadius = 0, ...props }: PieSectorDataItem) => (
               <Sector
@@ -100,7 +175,11 @@ export function GroupDeviceChart({
                 outerRadius={outerRadius + 10}
                 onClick={(e) => {
                   e.stopPropagation();
-                  showLegend && setActiveDevice(props.payload);
+                  //@ts-ignore
+                  if (finalData.device || finalData.sensor || finalData.group) {
+                    prev.current = finalData;
+                    setFinalData(props.payload);
+                  }
                 }}
               />
             )}
@@ -115,8 +194,8 @@ export function GroupDeviceChart({
                   textAnchor="middle"
                   dominantBaseline="middle"
                 >
-                  <tspan className="fill-foreground text-sm font-bold">
-                    {group.name}
+                  <tspan className="fill-foreground text-3xl font-bold capitalize">
+                    {prev.current ? finalData.name : group.classification}
                   </tspan>
                 </text>
               );
@@ -127,19 +206,20 @@ export function GroupDeviceChart({
       {showLegend && (
         <div className="">
           <h4 className=" text-center">Devices</h4>
-          <div className="flex-wrap gap-2 *:basis-1/4 *:justify-center top-full w-full my-4 border-y-2 py-4 border-gray-300 flex">
+          <div className="flex-wrap gap-6 top-full w-full my-4 border-y-2 py-4 border-gray-300 flex">
             {data.map((item, index) => (
               <div
-                className=" flex flex-row items-center gap-3 hover:cursor-pointer"
+                key={index}
+                className=" flex flex-row items-center gap-1 hover:cursor-pointer"
                 onClick={() => {
                   setActiveDevice(group.device?.[index]);
                 }}
               >
                 <div
-                  className="size-4"
-                  style={{ backgroundColor: item.fill }}
+                  className="size-4 rounded-full"
+                  style={{ backgroundColor: item.fill ?? "black" }}
                 ></div>
-                <p>{item.name}</p>
+                <p className=" text-nowrap">{item.name}</p>
               </div>
             ))}
           </div>

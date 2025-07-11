@@ -1,6 +1,7 @@
 "use client";
+import { getffromserver } from "@/actions";
 import { groupT } from "@/types";
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 const DataContext = createContext<groupT[] | null>(null);
 
@@ -19,7 +20,16 @@ function DataContextProvider({
   children: React.ReactNode;
   groups: groupT[];
 }) {
-  return <DataContext value={groups}>{children}</DataContext>;
+  const [groupsFromBackend, setGroupsFromBackend] = useState(groups);
+  useEffect(() => {
+    setInterval(async () => {
+      const res = await getffromserver();
+      setGroupsFromBackend(res);
+      console.log("updated");
+    }, 10000);
+  }, []);
+
+  return <DataContext value={groupsFromBackend}>{children}</DataContext>;
 }
 
 export default DataContextProvider;

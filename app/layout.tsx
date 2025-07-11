@@ -14,6 +14,7 @@ import { parseItemToArray, pullPrtgGraph } from "@/src/utils";
 import { classificationT, groupT } from "@/types";
 import { groupSchema } from "@/schemas";
 import DataContextProvider from "@/src/components/DataContextProvider";
+import Image from "next/image";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -94,7 +95,20 @@ export default async function RootLayout({
           <div className="flex flex-col h-full">
             <header className="">
               <nav className="p-4 bg-gray-700 text-white font-semibold  flex w-full justify-between">
-                <NavigationMenu>
+                <div>
+                  <Image 
+                    src="/images/orion.jpg"
+                    alt="Logo"
+                    width={50}
+                    height={50}
+                    className="rounded-lg shadow-md"
+                  />
+                
+                </div>
+                <div className="mt-3">
+                  <h4 className="mr-60">ORION-X</h4>
+                </div>
+                <NavigationMenu className="mr-80">
                   <NavigationMenuList>
                     <NavigationMenuItem>
                       <NavigationMenuLink href="/">Devices</NavigationMenuLink>
